@@ -1,1 +1,1 @@
-addSbtPlugin("com.lihaoyi" %% "fastparse" % "0.3.7")
+libraryDependencies += "com.lihaoyi" %% "fastparse" % "0.3.7"
