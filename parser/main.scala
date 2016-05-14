@@ -2,9 +2,9 @@ import fastparse.parsers.Combinators.Rule
 
 object Main {
 
-  val c-printable = '\u0009', '\u000A', '\u000D', '\u0020' until '\u007E', '\u0085', '\u00A0' to '\uD7FF', '\uE000' to '\uFFFD' // add 10000-10FFFF
-  val nb-json = '\u0009' // add 20-10FFFF
-  val c-bom = '\uFEFF' // byte order mark
+  val c-printable = P(CharIn('\u0009', '\u000A', '\u000D', '\u0020' until '\u007E', '\u0085', '\u00A0' to '\uD7FF', '\uE000' to '\uFFFD')) // add 10000-10FFFF
+  val nb-json = P('\u0009') // add 20-10FFFF
+  val c-bom = P('\uFEFF') // byte order mark
   val c-seq-entry = P('-')
   val c-map-key = P('?')
   val c-map-value = P(':')
