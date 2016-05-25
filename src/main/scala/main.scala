@@ -1,19 +1,23 @@
 import fastparse.parsers.Combinators.Rule
 
 object Main {
-
-  val c-printable = P(CharIn('\u0009', '\u000A', '\u000D', '\u0020' until '\u007E', '\u0085', '\u00A0' to '\uD7FF', '\uE000' to '\uFFFD')) // add 10000-10FFFF
-  val nb-json = P('\u0009') // add 20-10FFFF
+  // Reminder @self: UTF-32 not currently included
+  val c-printable = P(CharIn('\u0009', '\u000A', '\u000D', '\u0020' until '\u007E',
+                      '\u0085', '\u00A0' to '\uD7FF', '\uE000' to '\uFFFD')) // add 10000-10FFFF
+  val nb-json = P(CharIn('\u0009', '\u0020' to '\uFFFD')) //debug + add 20-10FFFF
   val c-bom = P('\uFEFF') // byte order mark
+
+  // start: indicators
   val c-seq-entry = P('-')
   val c-map-key = P('?')
   val c-map-value = P(':')
+  // flow indicators
   val c-entry-sep = P(',')
   val c-seq-start = P('[')
   val c-seq-end = P(']')
   val c-map-start = P('{')
   val c-map-end = P('}')
-  //val flow-indicators
+
   val c-comment = P('#')
   val c-anchor = P('&')
   val c-alias = P('*')
@@ -24,11 +28,13 @@ object Main {
   val c-db-quote = P('\"')
   val c-directive = P('%')
   val c-reserved = P('@' | '`')
-  //val indicators
+  // end: indicators
+
   val b-lf = P('\u000A')
   val b-cr = P('\u000D')
   val b-char = P(b-lf | b-cr)
-  //nb-char = c-printable - b-char - c-bom
+
+  val nb-char = P(c-printable - b-char - c-bom) // TODO
   val s-space = P('\u0020')
   val s-tab = P('\u0009')
   val s-white = P(s-space | s-tab)
