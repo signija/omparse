@@ -41,9 +41,9 @@ object Main {
   val tab = P("\u0009")
   val white = P(space | tab)
   val char = P(nbChar.filter(_ != white))
-  val decDigit = P(CharIn(('0' to '9').toList))
-  val hexDigit = P(decDigit | CharIn(('\u0041' to '\u0046').toList, ('\u0061' to '\u0066').toList))
-  val asciiLetter = P(CharIn(('\u0041' to '\u005A').toList, ('\u0061' to '\u007A').toList))
+  val decDigit = P(CharIn('0' to '9'))
+  val hexDigit = P(decDigit | CharIn('\u0041' to '\u0046', '\u0061' to '\u0066'))
+  val asciiLetter = P(CharIn('\u0041' to '\u005A', '\u0061' to '\u007A'))
   val wordChar = P(decDigit | asciiLetter | "-")
   val uriChar = P("%" ~ hexDigit ~ hexDigit | wordChar | "#" | ";" | "/" | "?" | ":" | "@" | "&" | "=" | "+" | "$" | ","
                      | "_" | "." | "!" | "~" | "*" | "\'" | "(" | ")" | "[" | "]")
