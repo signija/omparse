@@ -1,75 +1,79 @@
-import fastparse.parsers.Combinators.Rule
+//import fastparse.parsers.Combinators.Rule
+import fastparse.all._
 
 object Main {
   // Reminder @self: UTF-32 not currently included
-  val c-printable = P(CharIn('\u0009', '\u000A', '\u000D', '\u0020' until '\u007E',
-                      '\u0085', '\u00A0' to '\uD7FF', '\uE000' to '\uFFFD')) // add 10000-10FFFF
-  val nb-json = P(CharIn('\u0009', '\u0020' to '\uFFFD')) //debug + add 20-10FFFF
-  val c-bom = P('\uFEFF') // byte order mark
+  // Convention: charFoo represents a single special character. fooChar represents a range of characters.
+  val printableChar = P(CharIn('\u0020' to '\u007E', '\u00A0' to '\uD7FF', '\uE000' to '\uFFFD')) // add 10000-10FFFF
+  val nbJson = P("\u0009" | CharIn('\u0020' to '\uFFFD')) //add FFFD+ - 10FFFF
+  val charBOM = P("\uFEFF") // byte order mark
 
   // start: indicators
-  val c-seq-entry = P('-')
-  val c-map-key = P('?')
-  val c-map-value = P(':')
+  val charSeqEntry = P("-")
+  val charMapKey = P("?")
+  val charMapValue = P(":")
   // flow indicators
-  val c-entry-sep = P(',')
-  val c-seq-start = P('[')
-  val c-seq-end = P(']')
-  val c-map-start = P('{')
-  val c-map-end = P('}')
+  val charEntrySep = P(",")
+  val charSeqStart = P("[")
+  val charSeqEnd = P("]")
+  val charMapStart = P("{")
+  val charMapEnd = P("}")
+  val flowIndicators = List(charEntrySep, charSeqStart, charSeqEnd, charMapStart, charMapEnd)
 
-  val c-comment = P('#')
-  val c-anchor = P('&')
-  val c-alias = P('*')
-  val c-tag = P('!')
-  val c-literal = P('|')
-  val c-folded = P('>')
-  val c-sq-quote = P('\'')
-  val c-db-quote = P('\"')
-  val c-directive = P('%')
-  val c-reserved = P('@' | '`')
+  val charComment = P("#")
+  val charAnchor = P("&")
+  val charAlias = P("*")
+  val charTag = P("!")
+  val charLiteral = P("|")
+  val charFolded = P(">")
+  val charSQuote = P("\'")
+  val charDQuote = P("\"")
+  val charDirective = P("%")
+  val charReserved = P("@" | "`")
   // end: indicators
 
-  val b-lf = P('\u000A')
-  val b-cr = P('\u000D')
-  val b-char = P(b-lf | b-cr)
+  val lf = P("\u000A")
+  val cr = P("\u000D")
+  val break = P(lf | cr)
 
-  val nb-char = P(c-printable - b-char - c-bom) // TODO
-  val s-space = P('\u0020')
-  val s-tab = P('\u0009')
-  val s-white = P(s-space | s-tab)
-  //ns-char = nb-char - s-white
-  val ns-dec-digit = P(CharIn(0 to 9))
-  val ns-hex-digit = P(ns-dec-digit | CharIn('\u0041' to '\u0046', '\u0061' to '\u0066'))
-  val ns-ascii-letter = P(CharIn('\u0041' to '\u005A', '\u0061' to '\u007A'))
-  val ns-word-char = P(ns-dec-digit | ns-ascii-letter | '-')
-  val ns-uri-char = P('%' ~ ns-hex-digit ~ ns-hex-digit | ns-word-char | '#' | ';' | '/' | '?' | ':' | '@' | '&' | '=' | '+' | '$' | ','
-                     | '_' | '.' | '!' | '~' | '*' | '\'' | '(' | ')' | '[' | ']')
-  //ns-tag-char = ns-uri-char - '!' - c-flow-indicators
+  val nbChar = P(printableChar.filter(x => (x != break) && (x != charBOM)))
+  val space = P("\u0020")
+  val tab = P("\u0009")
+  val white = P(space | tab)
+  val char = P(nbChar.filter(_ != white))
+  val decDigit = P(CharIn(('0' to '9').toList))
+  val hexDigit = P(decDigit | CharIn(('\u0041' to '\u0046').toList, ('\u0061' to '\u0066').toList))
+  val asciiLetter = P(CharIn(('\u0041' to '\u005A').toList, ('\u0061' to '\u007A').toList))
+  val wordChar = P(decDigit | asciiLetter | "-")
+  val uriChar = P("%" ~ hexDigit ~ hexDigit | wordChar | "#" | ";" | "/" | "?" | ":" | "@" | "&" | "=" | "+" | "$" | ","
+                     | "_" | "." | "!" | "~" | "*" | "\'" | "(" | ")" | "[" | "]")
+  val tagChar = P(uriChar.filter(x => (x != '!') && (flowIndicators.contains(x))))
+
   //TODO escaped characters
   //s-indent(n) = s-space x n
-  //s-separate-in-line = s-white+
+  val sepInline = P(white).rep // TODO rep+
   //TODO line prefixes, empty lines, line folding
-  //val c-nb-comment-text = P(c-comment ~ nb-char*)
-  //b-comment = b-non-content
-  //s-b-comment = (s-separate-in-line c-nb-comment-text?)? b-comment
+  val commentText = P(charComment ~ nbChar.rep) //TODO rep*
+  //val break-comment = P(break | EOF)
+  val scalarComment = P((sepInline ~ commentText.?).? ~ break) // TODO check cuts
   //l-comment = s-separate-in-line c-nb-comment-text? b-comment
   //s-l-comments = (s-b-comment //start of line) l-comment*
   //TODO separation lines
-  val l-directive = P(l-directive ~ (ns-yaml-directive | ns-tag-directive | ns-reserved directive) ~ s-l-comments)
-  val ns-reserved-directive = P(ns-directive-name ~ (s-separate-in-line ~ ns-directive-parameter).rep) // rep*
-  val ns-directive-name = P(ns-char.rep) // rep+
-  val ns-directive-parameter = P(ns-char.rep) //rep+
-  val ns-yaml-directive = P("YAML" ~ s-separate-in-line ~ ns-yaml-version) // 1 per document
-  val ns-yaml-version = P(ns-dec-digit.rep ~ "." ~ ns-dec-digit.rep) //rep+
-  val ns-tag-directive = P("TAG" ~ ((s-separate-in-line ~ c-tag-handle) | (s-separate-in-line ~ ns-tag-prefix)))
-  val c-tag-handle = P(c-named-tag-handle | c-secondary-tag-handle | c-primary-tag-handle)
-  val c-primary-tag-handle = P("!")
-  val c-secondary-tag-handle = P("!!")
-  val c-named-tag-handle = P("!" ~ ns-word-char.rep ~ "!") // rep+
-  val ns-tag-prefix = P(c-ns-local-tag-prefix | ns-global-tag-prefix)
-  val c-ns-local-tag-prefix = P("!" ~ ns-uri-char.rep) // rep*
-  val ns-global-tag-prefix = P(ns-tag-char ~ ns-uri-char.rep) // rep*
+
+  val directive = P(charDirective ~ (yamlDirective | tagDirective | reservedDirective)) // ~ s-l-comments)
+  val reservedDirective = P(directiveName ~ (sepInline ~ directiveParameter).rep) // rep*
+  val directiveName = P(char.rep) // rep+
+  val directiveParameter = P(char.rep) //rep+
+  val yamlDirective = P("YAML" ~ sepInline ~ yamlVersion) // 1 per document
+  val yamlVersion = P(decDigit.rep ~ "." ~ decDigit.rep) //rep+
+  val tagDirective = P("TAG" ~ ((sepInline ~ tagHandle) | (sepInline ~ tagPrefix)))
+  val tagHandle = P(namedTagHandle | secondaryTagHandle | primaryTagHandle)
+  val primaryTagHandle = P("!")
+  val secondaryTagHandle = P("!!")
+  val namedTagHandle = P("!" ~ wordChar.rep ~ "!") // rep+
+  val tagPrefix = P(localTagPrefix | globalTagPrefix)
+  val localTagPrefix = P("!" ~ uriChar.rep) // rep*
+  val globalTagPrefix = P(charTag ~ uriChar.rep) // rep*
 
   def main(args: Array[String]): Unit = {
     import fastparse.all._
