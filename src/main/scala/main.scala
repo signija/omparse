@@ -5,7 +5,7 @@ object Main {
   // Reminder @self: UTF-32 not currently included
   // Convention: charFoo represents a single special character. fooChar represents a range of characters.
   val printableChar = P(CharIn('\u0020' to '\u007E', '\u00A0' to '\uD7FF', '\uE000' to '\uFFFD')) // add 10000-10FFFF
-  val nbJson = P("\u0009" | CharIn('\u0020' to '\uFFFD')) //add FFFD+ - 10FFFF
+  val nbJson = P("\u0009" | CharIn('\u0020' to '\uFFFD')) //add FFFD+ - 10FFFF -- can be deleted if not dealing with JSON
   val charBOM = P("\uFEFF") // byte order mark
 
   // start: indicators
@@ -54,7 +54,7 @@ object Main {
   val sepInline = P(white).rep // TODO rep+
   //TODO line prefixes, empty lines, line folding
   val commentText = P(charComment ~ nbChar.rep) //TODO rep*
-  //val break-comment = P(break | EOF)
+  //val breakComment = P(break | EOF)
   val scalarComment = P((sepInline ~ commentText.?).? ~ break) // TODO check cuts
   //l-comment = s-separate-in-line c-nb-comment-text? b-comment
   //s-l-comments = (s-b-comment //start of line) l-comment*
