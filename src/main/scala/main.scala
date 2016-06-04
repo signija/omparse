@@ -51,9 +51,9 @@ object Main {
 
   //TODO escaped characters
   //s-indent(n) = s-space x n
-  val sepInline = P(white).rep // TODO rep+
+  val sepInline = P(white).rep(1)
   //TODO line prefixes, empty lines, line folding
-  val commentText = P(charComment ~ nbChar.rep) //TODO rep*
+  val commentText = P(charComment ~ nbChar.rep)
   //val breakComment = P(break | EOF)
   val scalarComment = P((sepInline ~ commentText.?).? ~ break) // TODO check cuts
   //l-comment = s-separate-in-line c-nb-comment-text? b-comment
@@ -61,19 +61,19 @@ object Main {
   //TODO separation lines
 
   val directive = P(charDirective ~ (yamlDirective | tagDirective | reservedDirective)) // ~ s-l-comments)
-  val reservedDirective = P(directiveName ~ (sepInline ~ directiveParameter).rep) // rep*
-  val directiveName = P(char.rep) // rep+
-  val directiveParameter = P(char.rep) //rep+
+  val reservedDirective = P(directiveName ~ (sepInline ~ directiveParameter).rep)
+  val directiveName = P(char.rep(1))
+  val directiveParameter = P(char.rep(1))
   val yamlDirective = P("YAML" ~ sepInline ~ yamlVersion) // 1 per document
-  val yamlVersion = P(decDigit.rep ~ "." ~ decDigit.rep) //rep+
+  val yamlVersion = P(decDigit.rep(1) ~ "." ~ decDigit.rep(1))
   val tagDirective = P("TAG" ~ ((sepInline ~ tagHandle) | (sepInline ~ tagPrefix)))
   val tagHandle = P(namedTagHandle | secondaryTagHandle | primaryTagHandle)
   val primaryTagHandle = P("!")
   val secondaryTagHandle = P("!!")
-  val namedTagHandle = P("!" ~ wordChar.rep ~ "!") // rep+
+  val namedTagHandle = P("!" ~ wordChar.rep(1) ~ "!")
   val tagPrefix = P(localTagPrefix | globalTagPrefix)
-  val localTagPrefix = P("!" ~ uriChar.rep) // rep*
-  val globalTagPrefix = P(charTag ~ uriChar.rep) // rep*
+  val localTagPrefix = P("!" ~ uriChar.rep)
+  val globalTagPrefix = P(charTag ~ uriChar.rep)
 
   def main(args: Array[String]): Unit = {
     import fastparse.all._
