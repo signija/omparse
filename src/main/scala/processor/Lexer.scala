@@ -1,23 +1,12 @@
+package processor
 import fastparse.all._
 
-object Lexical {
-  val document = P(cwlDirective ~ content ~ End)
-  val cwlDirective = P("cwlVersion: cwl:draft-3")
-  val content = P(inputs ~ outputs ~ class)
-  val class = P(steps | baseCommand)
-  val baseCommand = P("baseCommand" ~ ws)
-
-  // steps are essentially documents by themselves
-  val steps = P("steps:" ~ ws ~ document.rep(1))
-
-  // we ignore comments, so we don't capture any information
-  val comment = P(charComment ~ (character | space).rep)
-
-  val inputs = P(" ")
-  val outputs = P(" ")
+object Lexer {
 
   // identifiers may not start with a digit
-  val identifier = P((letter ~ character.rep).!)
+  val identifier: P[AST.identifier] = P((letter ~ character.rep)).!.map(AST.identifier)
+
+  // val keywords = Set("cwlVersion", "inputs", "outputs", "class", "Workflow", "CommandLineTool")
 
   // start: indicators
   val charEntrySep = P(",")
@@ -33,6 +22,8 @@ object Lexical {
   val charComment = P("#")
   // end: indicators
 
+  val comment = P(charComment ~ CharsWhile(_ != '\n', min = 0))
+
   // identifier characters
   val character = (letter | decDigit)
   val letter = P(CharIn('A' to 'Z', 'a' to 'z'))
@@ -44,4 +35,5 @@ object Lexical {
   val break = P(lf | cr)
   val space = P(" ")
   val ws = P((space | break).rep(1))
+
 }
