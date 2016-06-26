@@ -1,0 +1,1 @@
+Success(Clt(ArrayBuffer(Input(Ident(message),Type(string),InValue(testing a command line tool))),ArrayBuffer(Output(Ident(output),Type(File),Location(test.txt))),SysTask(echo)),250)

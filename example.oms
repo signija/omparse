@@ -1,0 +1,12 @@
+val message = Val[String]
+val outputTemp0 = Val[String]
+val output = Val[File]
+val task = SystemExecTask(
+ " echo ${message}" 
+)set(
+(inputs, outputs) += message,
+stdOut := outputTemp0,
+message := "testing a command line tool" 
+)
+val fileHook = AppendToFileHook("/tmp/test.txt", "${outputTemp0}")
+task hook fileHook
